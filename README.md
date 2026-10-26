@@ -63,7 +63,7 @@ uvicorn app.main:app --reload
 
 Real məhsul şəkillərinin test bazası, Top-1/Top-3 dəqiqlik ölçümü və AWS-də canlı deploy bu commit-in bir hissəsi deyil. Gemini və DINOv2 üçün canlı inferensiya da ayrıca təsdiqlənməlidir. Public internetə açmazdan əvvəl HTTPS, Nginx rate limit, auth/abuse qoruması və backup əlavə edilməlidir. Gemini rejimində göndərilən şəkillər xarici Google API-yə ötürülür.
 
-Məlumatları qorumaq üçün `data/` və `.env` Git-ə daxil edilmir. Admin açarı heç vaxt repozitoriyaya daxil edilməməlidir. `AGENTS.md` inkişaf planı və sessiyalararası həqiqət mənbəyidir: **hər yeni sessiyada ilk onu oxuyun**.
+Məlumatları qorumaq üçün `data/` və `.env` Git-ə daxil edilmir. Admin açarı heç vaxt repozitoriyaya daxil edilməməlidir. `agent.md` inkişaf planı və sessiyalararası həqiqət mənbəyidir: **hər yeni sessiyada ilk onu oxuyun**. Standart agent inteqrasiyaları üçün `AGENTS.md` yönləndirici fayl da saxlanılır..
 
 ### Mənbələr
 - [Gemini multimodal embedding API](https://ai.google.dev/gemini-api/docs/embeddings)
