@@ -89,3 +89,11 @@
 - Research: kitUIN/PicImageSearch (MIT; Google Lens, Yandex, Bing clients without SerpApi credits); omkarcloud/google-lens-scraper (MIT, self-hosted, but README acknowledges Google CAPTCHA and IP throttling after tens of searches, possible paid proxy/CAPTCHA); taazkareem/google-lens-pro (part free/part paid, may need Google session). SearXNG is text/image-keyword search fallback, NOT true upload-based reverse-image search.
 - Separate Colab experiment Module2_Keyless_Reverse_Search_Colab.ipynb prepared in conversation: notebook syntax/format validated; one manual image upload; three no-key PicImageSearch engines, serial searches and timing/error JSON report. NOT committed to app and live Colab provider search NOT RUN.
 - Pending: test real phone images in Colab, observe rate limits and precision, then implement separate Module 2 route/UI and regression tests while retaining Module 1.
+
+
+## Module 2 Yandex parser debug — 2026-10-26
+- User ran own Windows Python requests reverse-image upload with TEST2.jpeg: received cbirId successfully and a tags guess, but extracted only a /get-images-cbir/.../ocr link and 0 source sites.
+- Confirmed parser issue: page data-state normally contains initialState.cbirSites.sites, not top-level cbirSites; other useful paths initialState.cbirSitesList.sites, cbirSimilar.thumbs, cbirMarketProducts.products, cbirTags.tags. The /ocr image URL is not a matched source page.
+- External evidence: kitUIN/PicImageSearch/PicImageSearch/model/yandex.py and ScrapingBee/yandex-reverse-image-api README (documented 2026-09 live). Yandex may return a CAPTCHA HTTP 200 or no matching sites; never assume a result count of zero implies absence online.
+- Delivered local Windows-ready standalone diagnostic script test1_fixed.py + test_parser.py and README_AZ.md as user-downloadable ZIP, **not** merged into production app. 5 deterministic offline unittest cases PASS, Python compile PASS. Real TEST2.jpeg/live Yandex result NOT RUN because original image was not supplied.
+- Next: User runs the script locally and inspects yandex_debug/results.json fields (status/title/captcha/state_keys/result counts). Do not share private raw HTML/session tokens. Once validated on real images, implement module2 as separate provider route and UI, with cache/rate limits and timeouts; keep Module1 unchanged.
