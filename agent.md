@@ -64,3 +64,11 @@
 - Verified test 2026-10-26: real CPU inference PASS https://github.com/f1r10/local-image-search/actions/runs/40286503050 (initial 307.9 ms, warm 185.6 and 183.9 ms, synthetic image; 384-dimension normalized vectors). Full CI PASS https://github.com/f1r10/local-image-search/actions/runs/40286503061. AWS timing and ONNX performance NOT TESTED.
 
 - ONNX follow-up (2026-10-26): first attempt failed due to an Optimum runtime compatibility issue (CI 40286932427). Replaced with direct ONNX Runtime; smoke PASS (CI 40287245273). Tested embedding 99.3 ms without YOLO crop on hosted CPU, synthetic image only. AWS and real-product benchmarks remain pending. Reindex on ONNX version changes.
+
+## M2 integration outcome — 2026-10-26
+- PR #1 was squash-merged into main at 457d343c64a784781a8a3ec8105bbd300f0bad65. Feature adds Colab-compatible YOLOv8n + DINOv2 Small mean-pooling as optional CPU Torch/ONNX providers, preserving existing Lite/Gemini provider paths.
+- Latest PR full CI PASS: https://github.com/f1r10/local-image-search/actions/runs/40287532578. Real model CPU smoke PASS (both Torch and ONNX): https://github.com/f1r10/local-image-search/actions/runs/40287532555.
+- Previous ONNX library issue was fixed by using direct onnxruntime with one-time torch.onnx.export. ONNX index uses onnx-v2 identity; provider changes require reindex.
+- Quantitative runner-only synthetic smoke: Torch warmed 185/184 ms with YOLO auto; ONNX 99 ms with YOLO off. NOT comparable directly, and NOT AWS results.
+- STILL OPEN: AWS installation, genuine watch database/phone-photo tests (Top-1, Top-3, no-match), measured AWS latency, public endpoint rate limits/HTTPS, licensing review before commercial deployment.
+- New sessions MUST read agent.md and README.md and confirm main HEAD before any further edits.
