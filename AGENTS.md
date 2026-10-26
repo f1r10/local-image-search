@@ -18,7 +18,7 @@
 - M0 Repository initialization: created initial README commit e4b71caa36025e4960dcc399d402bd1f89d7160c.
 - M1 MVP implementation: **PASS (for technical MVP / Lite synthetic test only)**. Routes, backend, UI, Docker Compose, provider adapters, reindex CLI and tests committed at d89bdc2560f1b545c3cfcb9c5910064bd4921849; corrective commit 4ab3285425f8f048edf8a9f36e3f1c438d2ba63b.
 - M1 CI run #1 https://github.com/f1r10/local-image-search/actions/runs/40283239747 FAILED during collection (ModuleNotFoundError: app). Fixed runner invocation to python -m pytest and SQLite connection lifetime in 4ab3285.\n- M1 CI run #2 https://github.com/f1r10/local-image-search/actions/runs/40283403488 **PASS: 5/5 tests, compileall PASS, 1 upstream Starlette/httpx deprecation warning**. Evidence: health/empty index, add and reencoded-JPEG visual retrieval, admin token guard, invalid/oversize image rejection, delete cascade. This is a synthetic red-vs-blue demo, NOT a real-world same-watch/phone accuracy benchmark.
-- M2 AWS deployment: NOT STARTED; server access not supplied. Instructions available in README.
+- M1 Docker container smoke: **PASS** at https://github.com/f1r10/local-image-search/actions/runs/40283647486 (commit f55bdf3662374df92a6734094873896637ee1e94): 5/5 API tests PASS, Python compileall PASS, Docker image build PASS, container startup + /api/health + web / over HTTP PASS. This validates GitHub Actions runner, not AWS server or Gemini/DINOv2 inference.\n- M2 AWS deployment: NOT STARTED; server access not supplied. Instructions available in README.
 - M3 Real-world phone image evaluation: NOT STARTED. No user-owned photos provided. Collect 20–30 products with diverse views and evaluate Top-1, Top-3, P50/P95 latency.
 - M4 Production hardening: NOT STARTED; rate limits, backups, admin auth improvements, SKU constraints, observability, API quota control, model fallback / timeouts.
 
@@ -36,7 +36,7 @@
 
 ## Required next actions after MVP commit
 1. [DONE for initial MVP] Inspect GitHub Actions; initial failure fixed, 5/5 synthetic integration tests PASS (run 40283403488). Future commits must retain CI PASS.
-2. Obtain AWS host access or have user run the documented deployment; never assume deployment.
+2. [NEXT] Obtain AWS host access or have user run the documented deployment; never assume deployment. Current CI proof is https://github.com/f1r10/local-image-search/actions/runs/40283647486 (all jobs successful).
 3. Set Gemini key in server `.env` (never in Git) and explicitly reindex existing products.
 4. Collect real images for catalog+phone benchmark (different angles, backgrounds, similar watch models).
 5. Determine error threshold using actual evaluation data; add safe no-match behavior and reranker when justified.
