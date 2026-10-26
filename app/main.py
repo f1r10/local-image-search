@@ -20,7 +20,7 @@ from .embedding import active_provider, unit
 Image.MAX_IMAGE_PIXELS = 20_000_000
 MAX_BYTES = 6 * 1024 * 1024
 MAX_IMAGES = 6
-embedding_slots = asyncio.Semaphore(2)
+embedding_slots = asyncio.Semaphore(max(1, min(4, int(os.getenv('EMBEDDING_CONCURRENCY', '2')))))
 
 
 def storage():

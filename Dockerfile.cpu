@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false HF_HOME=/srv/model-cache/huggingface \
+    HOME=/home/appuser
+WORKDIR /srv
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt requirements-vision-cpu.txt requirements-vision-onnx.txt ./
+RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 \
+    --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir -r requirements-vision-onnx.txt
+COPY app/ ./app/
+RUN useradd -r -u 10001 -m appuser \
+    && mkdir -p /srv/data /srv/model-cache \
+    && chown -R appuser:appuser /srv/data /srv/model-cache
+USER appuser
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
