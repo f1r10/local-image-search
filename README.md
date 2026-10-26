@@ -68,3 +68,35 @@ Məlumatları qorumaq üçün `data/` və `.env` Git-ə daxil edilmir. Admin aç
 ### Mənbələr
 - [Gemini multimodal embedding API](https://ai.google.dev/gemini-api/docs/embeddings)
 - [Meta DINOv2 Small](https://huggingface.co/facebook/dinov2-small)
+
+
+## Colab YOLOv8n + DINOv2 Small pipeline (optional CPU mode)
+
+**Status:** integrated as a selectable experimental provider; basic CI checks do NOT download or execute neural-model weights. The Colab user reports promising quality, but AWS timing and real watch accuracy are not yet independently measured.
+
+New providers: `dinov2-yolo-torch` (PyTorch CPU, safest initial port of the Colab test) and `dinov2-yolo-onnx` (experimental ONNX Runtime). They use mean pooling of `last_hidden_state` across all tokens, followed by L2 normalization. The older `dinov2` provider still uses CLS pooling and is unchanged. **Never mix embeddings from two configurations.** Model/provider/crop config changes require `python -m app.reindex`.
+
+**YOLO caveat:** pre-trained `yolov8n.pt` uses COCO80; there is no wristwatch class. The highest-confidence box may be a *person* instead of a watch. This implementation filters product classes and falls back to the original image unless an eligible object is found. For an all-watch catalog compare `YOLO_CROP_MODE=off` (lower CPU latency) versus `auto` using real photos. Cropping is applied in the same way to catalog and query images.
+
+### CPU Docker run on AWS (2–4 vCPU; 4–8 GB RAM strongly recommended)
+
+```bash
+git pull --ff-only
+cp .env.example .env  # only if first setup; NEVER overwrite a working .env
+# Ensure ADMIN_TOKEN already exists (see earlier instructions). Do not paste secrets in chat.
+mkdir -p model-cache data
+sudo chown -R 10001:10001 model-cache data
+docker compose -f compose.yaml -f compose.cpu.yaml build
+docker compose -f compose.yaml -f compose.cpu.yaml up -d
+docker compose -f compose.yaml -f compose.cpu.yaml logs --tail=100 image-search
+curl http://127.0.0.1:8000/api/health
+docker compose -f compose.yaml -f compose.cpu.yaml exec image-search python -m app.reindex
+```
+
+The optional CPU image is much larger than the default image (PyTorch, Ultralytics, Transformers and ONNX dependencies). The first inference downloads YOLO/DINO weights or exports ONNX into the persistent `model-cache` volume; provide sufficient disk space and startup time. Use `IMAGE_PROVIDER_CPU=dinov2-yolo-onnx` in `.env` to try ONNX; ONNX export has not been validated on the target AWS host. Start with Torch to reproduce Colab behavior. Docker Compose uses only localhost port 8000 as before.
+
+For watch-only benchmarks, set `YOLO_CROP_MODE=off` and **reindex** before comparisons. Record separate Top-1/Top-3, P50/P95 latency, cold-start, memory, and query image conditions. An embedding cosine score is not a calibrated confidence percentage.
+
+**Licenses:** DINOv2 Small is Apache-2.0, while Ultralytics YOLOv8/code/weights have AGPL-3.0 or paid Enterprise terms. Commercial or closed-source SaaS deployment needs an explicit license compliance review; do not assume a public GitHub repository alone satisfies all obligations. See https://www.ultralytics.com/license and https://huggingface.co/facebook/dinov2-small.
+
+**Tests:** `python -m pytest -q` checks deterministic cropping, mean pooling and existing API behavior without heavyweight model downloads. A full CPU-model inference smoke test and real-phone retrieval benchmark remain **NOT RUN** until an appropriate host/model download and sample images are available.

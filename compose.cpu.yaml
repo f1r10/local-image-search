@@ -1,0 +1,17 @@
+# Extend compose.yaml with: docker compose -f compose.yaml -f compose.cpu.yaml ...
+services:
+  image-search:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    environment:
+      IMAGE_PROVIDER: ${IMAGE_PROVIDER_CPU:-dinov2-yolo-torch}
+      TORCH_NUM_THREADS: ${TORCH_NUM_THREADS:-2}
+      EMBEDDING_CONCURRENCY: 1
+      OMP_NUM_THREADS: 2
+      OPENBLAS_NUM_THREADS: 1
+      HF_HOME: /srv/model-cache/huggingface
+      YOLO_MODEL: /srv/model-cache/yolov8n.pt
+      DINO_ONNX_DIR: /srv/model-cache/dinov2-onnx
+    volumes:
+      - ./model-cache:/srv/model-cache

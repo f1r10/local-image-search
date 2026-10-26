@@ -46,3 +46,15 @@
 - Keep provider names and embedding versions stable, and migrate/reindex before mixing indexes.
 - Every stage update: date, commit/PR ID, files touched, PASS/FAIL/NOT RUN test evidence, known defects, next priority.
 - Review agent.md at the start of every separate conversation, even when user only writes "davam et".
+
+
+## M2a — 2026-10-26: Colab YOLOv8n + DINOv2 CPU integration (feature branch)
+- **User-supplied working experiment:** YOLOv8n crop + facebook/dinov2-small mean pooling + L2 normalization + cosine retrieval; Colab result subjectively satisfactory. User supplied no catalog/query images or actual elapsed milliseconds to this conversation.
+- **Branch:** feat/visual-retrieval-pipeline, base main f9d36307d929323d90c91308577121bce25da488.
+- **Implementation:** new app/vision_pipeline.py; `dinov2-yolo-torch` and experimental `dinov2-yolo-onnx` providers in app/embedding.py; dedicated Dockerfile.cpu, compose.cpu.yaml, requirements-vision-cpu.txt and requirements-vision-onnx.txt; safe crop/mean pooling unit tests. Old Lite/Gemini/DINO CLS providers preserved. Main API concurrency configurable via EMBEDDING_CONCURRENCY.
+- **Important behavior:** COCO YOLOv8n does not detect wristwatches as a native category. Ignore person classes, crop only configured known products, otherwise use entire image. This may differ from the Colab naive highest-confidence crop; compare results with user's original data.
+- **Index identity:** Embedding provider key includes backend and crop configuration fingerprint. Provider/crop changes require a full reindex; never compare incompatible vectors.
+- **Security and deployment:** default Docker remains lightweight; CPU Docker separate and potentially memory/disk-heavy. Persistent model-cache volume; no API key needed in CPU mode. Not deployed to user's AWS; no host credentials supplied.
+- **Licensing:** Ultralytics YOLO software/model is AGPL-3.0 or Enterprise; evaluate compliance before proprietary/commercial use. DINOv2 Small model card Apache 2.0.
+- **Test evidence at coding stage:** NOT RUN for heavy-model weights/ONNX export/AWS CPU benchmarks or real watch accuracy; prior Lite CI was PASS at run 40283647486. New unit regression tests will be checked by the PR GitHub Actions run; do not mark PASS before checking it.
+- **Next priority:** 1) inspect PR CI; fix any failures; 2) deploy CPU image on 2–4 vCPU/4–8 GB instance; 3) test Torch end-to-end; 4) test ONNX export and speed against Torch; 5) compare crop on/off with 20–30 representative user photos; 6) tune/validate no-match threshold; 7) rate-limit public endpoints and back up SQLite + JPEGs.

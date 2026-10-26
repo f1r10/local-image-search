@@ -1,0 +1,3 @@
+-r requirements-vision-cpu.txt
+# Optional experimental ONNX route; validate model export in target environment.
+optimum-onnx[onnxruntime]>=0.0.3,<1

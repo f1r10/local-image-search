@@ -80,7 +80,13 @@ def provider(name):
         return Gemini()
     if name == "dinov2":
         return Dino()
-    raise ValueError("IMAGE_PROVIDER must be lite, gemini, or dinov2")
+    if name == "dinov2-yolo-torch":
+        from .vision_pipeline import DinoYolo
+        return DinoYolo(backend="torch")
+    if name == "dinov2-yolo-onnx":
+        from .vision_pipeline import DinoYolo
+        return DinoYolo(backend="onnx")
+    raise ValueError("IMAGE_PROVIDER must be lite, gemini, dinov2, dinov2-yolo-torch, or dinov2-yolo-onnx")
 
 
 def active_provider():
