@@ -1,0 +1,47 @@
+# Local Image Search — agent handoff / canonical project log
+
+**Rule for every agent, including a new ChatGPT/Codex conversation:** Before edits, read this file and README.md, inspect main HEAD and existing tests. After every milestone, update this file in the SAME PR/commit. Never claim PASS for untested functionality. Never commit API keys or actual customer images. Keep changes scoped; do not break existing working features.
+
+**Repository:** https://github.com/f1r10/local-image-search
+**Owner:** f1r10
+**Date started:** 2026-10-26
+**Scope:** AWS Ubuntu (2–4 vCPU, no GPU), visual search in 100–200 products with multiple catalog photos per product. User uploads ordinary phone photo; find ranked candidates, price, brand, SKU. Priorities: speed, correctness, minimal cost, self-hostable.
+
+## Architecture decisions
+- FastAPI serving HTML/JS frontend and JSON REST endpoints; SQLite for metadata and float32 embeddings; uploaded JPEG files on persistent volume.
+- Providers deliberately separated by versioned index: `lite-rgb-v1` (non-AI offline smoke test), `gemini-embedding-2-768` (main production candidate; requires a Gemini key), `facebook/dinov2-small-384` (CPU alternative, optional heavy dependencies).
+- Precompute catalog embeddings at upload; query only embeds one image then performs NumPy dot product. Best image score per product; up to 5 products displayed. No universal calibrated match threshold; treat all as candidates.
+- No requirement for FAISS/Qdrant at <~1000 product images. `python -m app.reindex` is required after switching providers.
+- OpenAI API is **not** the primary embedding pipeline; OpenAI text embedding models cannot directly embed product photos. OpenAI Vision reranking is an optional future enhancement, not implemented.
+
+## Milestones and current verification (do not infer success)
+- M0 Repository initialization: created initial README commit e4b71caa36025e4960dcc399d402bd1f89d7160c.
+- M1 MVP implementation: FastAPI routes, providers, image validation, persistent SQLite, responsive frontend, Docker Compose, CLI reindex, basic tests and GitHub Actions prepared in this change. **Implementation must be verified against actual commit and CI; status initially UNVERIFIED.**
+- M2 AWS deployment: NOT STARTED; server access not supplied. Instructions available in README.
+- M3 Real-world phone image evaluation: NOT STARTED. No user-owned photos provided. Collect 20–30 products with diverse views and evaluate Top-1, Top-3, P50/P95 latency.
+- M4 Production hardening: NOT STARTED; rate limits, backups, admin auth improvements, SKU constraints, observability, API quota control, model fallback / timeouts.
+
+## Security checklist
+- `.env` and `data/` ignored; ADMIN_TOKEN mandatory for writes, constant-time comparison.
+- Validate image decodability/type/6MB file size/20MP pixel limit; EXIF orientation normalized; JPEG re-encoded without EXIF metadata. Persistent volume owned by unprivileged container user.
+- Public search is NOT rate-limited yet and could consume Gemini quota. DO NOT expose publicly without rate limits and abuse budget control. Use Nginx HTTPS proxy before testing on internet.
+- No claims of similarity as calibrated probability or exact model identity.
+
+## Exit criteria for first test
+1. Tests pass on CI and can create/search/delete product with re-encoded JPEG image.
+2. Invalid or oversize uploads rejected; unauthenticated writes rejected.
+3. Health endpoint reports provider/index state.
+4. Real Gemini embeddings and real-world product phone photos remain independently pending until API key/test data available.
+
+## Required next actions after MVP commit
+1. Inspect GitHub Actions run and fix any failed unit/integration tests. Record run URL and findings here.
+2. Obtain AWS host access or have user run the documented deployment; never assume deployment.
+3. Set Gemini key in server `.env` (never in Git) and explicitly reindex existing products.
+4. Collect real images for catalog+phone benchmark (different angles, backgrounds, similar watch models).
+5. Determine error threshold using actual evaluation data; add safe no-match behavior and reranker when justified.
+6. Add HTTP rate limiting, backup/restore test, HTTPS hardening, CPU throughput benchmark, Docker DINOv2 profile.
+
+## Working agreements
+- Keep provider names and embedding versions stable, and migrate/reindex before mixing indexes.
+- Every stage update: date, commit/PR ID, files touched, PASS/FAIL/NOT RUN test evidence, known defects, next priority.
+- Review AGENTS.md at the start of every separate conversation, even when user only writes "davam et".

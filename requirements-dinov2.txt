@@ -1,0 +1,4 @@
+-r requirements.txt
+# Install the CPU build of PyTorch from https://pytorch.org/get-started/locally/
+torch>=2.3,<3
+transformers>=4.45,<5

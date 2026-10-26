@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Local Image Search — Vizual məhsul axtarışı</title>
+  <style>
+    :root{color-scheme:light;font:15px/1.5 system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#202938;background:#f4f6f9}
+    *{box-sizing:border-box}body{margin:0}header{background:white;border-bottom:1px solid #e2e6eb}
+    .shell{max-width:1030px;margin:auto;padding:22px}h1{font-size:25px;margin:0;font-weight:700}
+    h2{font-size:19px;margin:0 0 16px}p{color:#5c6573}small,.muted{color:#677487}
+    .brand{display:flex;justify-content:space-between;align-items:center;gap:14px}
+    .tag{font-size:12px;border:1px solid #d9e0e9;background:#f7f9fc;padding:4px 9px;border-radius:999px}
+    .tabs{display:flex;gap:8px;margin:24px 0 18px}button{border:1px solid #c6d0dd;border-radius:9px;background:#fff;padding:10px 15px;font:inherit;cursor:pointer}
+    button:hover{background:#f4f6f9}button:disabled{opacity:.55;cursor:wait}
+    button.primary,.tab.active{background:#193e7a;border-color:#193e7a;color:white}
+    section.card{background:white;border:1px solid #e3e8ee;border-radius:15px;padding:24px;margin-bottom:20px}
+    .hidden{display:none}.drop{border:2px dashed #bdcada;border-radius:12px;background:#fafcff;text-align:center;padding:35px 15px}
+    .drop input{max-width:100%}.hint{font-size:13px;color:#697786}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+    .status{min-height:22px;color:#34527a;margin:15px 0}.error{color:#b32838}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-top:16px}
+    .product{overflow:hidden;border:1px solid #e5e9ee;border-radius:12px;background:#fff}
+    .product img{display:block;object-fit:contain;width:100%;height:160px;background:#f8fafb}
+    .product .info{padding:12px}strong{display:block;line-height:1.4}.price{font-size:19px;font-weight:700;color:#163967}
+    label{display:block;font-weight:600;margin-top:12px}input,textarea{font:inherit;border:1px solid #c7d1dc;border-radius:8px;padding:11px;width:100%;background:#fff}
+    textarea{resize:vertical}.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .notice{background:#fff8ea;padding:12px 14px;border-radius:9px;font-size:13px;color:#6e5318}
+    @media(max-width:600px){.shell{padding:15px}.brand{align-items:flex-start;flex-direction:column}.admin-grid{grid-template-columns:1fr}section.card{padding:17px}}
+  </style>
+</head>
+<body>
+<header><div class="shell brand"><div><h1>Visual Product Finder</h1><small>Şəkillə məhsul axtarışı — AWS / CPU</small></div><span class="tag" id="providerBadge">Mühərrik yoxlanılır…</span></div></header>
+<main class="shell">
+  <nav class="tabs" aria-label="Bölmələr">
+    <button id="searchTab" class="tab active" type="button">Şəkillə axtarış</button>
+    <button id="adminTab" class="tab" type="button">Məhsul idarəsi</button>
+  </nav>
+  <div id="searchPanel">
+    <section class="card">
+      <h2>Telefon şəklindən məhsulu tap</h2>
+      <div class="drop">
+        <p>Şəkil seçin və ya telefonda kamera ilə çəkin</p>
+        <input id="queryImage" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+        <div class="hint">JPG, PNG və WEBP · Maksimum 6 MB</div>
+      </div>
+      <div class="controls"><button id="searchBtn" class="primary" type="button">Oxşar məhsulları tap</button><span class="muted" id="speed"></span></div>
+      <p class="status" role="status" id="searchStatus"></p>
+      <div class="notice">Nəticələr AI-nin vizual oxşarlıq namizədləridir, qəti model identifikasiyası deyil. Oxşarlıq faizi etibarlılıq ehtimalı hesab olunmur.</div>
+    </section>
+    <section class="card"><h2>Axtarış nəticələri</h2><div id="results" class="grid"></div></section>
+  </div>
+  <div id="adminPanel" class="hidden">
+    <section class="card">
+      <h2>Məhsul əlavə et</h2>
+      <p>Admin açarı serverdəki ADMIN_TOKEN ilə eyni olmalıdır; bu səhifə açarı yadda saxlamır.</p>
+      <form id="productForm">
+        <label for="adminKey">Admin açarı</label><input id="adminKey" type="password" required autocomplete="off" placeholder="ADMIN_TOKEN">
+        <div class="admin-grid">
+          <div><label for="productName">Məhsulun adı</label><input id="productName" name="name" required maxlength="250" placeholder="Casio Edifice"></div>
+          <div><label for="brand">Brend</label><input id="brand" name="brand" required maxlength="250" placeholder="Casio"></div>
+          <div><label for="sku">Model / SKU</label><input id="sku" name="sku" maxlength="250" placeholder="EFV-100D"></div>
+          <div><label for="price">Qiymət (AZN)</label><input id="price" name="price" type="number" min="0" step="0.01" required></div>
+        </div>
+        <label for="description">Əlavə məlumat</label><textarea id="description" name="description" maxlength="250" rows="2"></textarea>
+        <label for="catalogImages">Məhsul şəkilləri (1–6 ədəd)</label>
+        <input id="catalogImages" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+        <div class="controls"><button id="addBtn" type="submit" class="primary">Məhsulu yadda saxla</button></div>
+        <p id="adminStatus" class="status" role="status"></p>
+      </form>
+    </section>
+    <section class="card"><h2>Kataloq</h2><div id="catalog" class="grid"></div></section>
+  </div>
+</main>
+<script>
+(function(){
+  const byId=id=>document.getElementById(id);
+  function setStatus(id,msg,error){const x=byId(id);x.textContent=msg;x.className="status"+(error?" error":"");}
+  async function request(url,options){
+    const response=await fetch(url,options||{});
+    let data;try{data=await response.json()}catch(e){throw new Error("Server cavabı JSON deyil")}
+    if(!response.ok)throw new Error(typeof data.detail==="string"?data.detail:"Sorğu uğursuz oldu: "+response.status);
+    return data;
+  }
+  function switchPanel(panel){
+    ["search","admin"].forEach(id=>{
+      byId(id+"Panel").classList.toggle("hidden",id!==panel);
+      byId(id+"Tab").classList.toggle("active",id===panel);
+    });
+    if(panel==="admin")loadProducts();
+  }
+  byId("searchTab").onclick=()=>switchPanel("search");
+  byId("adminTab").onclick=()=>switchPanel("admin");
+  function productCard(p,admin){
+    const card=document.createElement("article");card.className="product";
+    const image=document.createElement("img");image.src=admin?p.images[0]:p.image_url;image.alt=p.name;image.loading="lazy";card.appendChild(image);
+    const info=document.createElement("div");info.className="info";
+    const title=document.createElement("strong");title.textContent=p.brand+" — "+p.name;info.appendChild(title);
+    const sku=document.createElement("small");sku.textContent=p.sku||"Model kodu yoxdur";info.appendChild(sku);
+    const price=document.createElement("div");price.className="price";price.textContent=Number(p.price).toFixed(2)+" AZN";info.appendChild(price);
+    if(!admin){
+      const score=document.createElement("small");score.textContent="Vizual oxşarlıq: "+(p.similarity*100).toFixed(1)+"% (etibarlılıq deyil)";info.appendChild(score);
+    }else{
+      const remove=document.createElement("button");remove.type="button";remove.textContent="Sil";
+      remove.onclick=async()=>{
+        if(!confirm("Bu məhsul silinsin?"))return;
+        try{await request("/api/admin/products/"+p.id,{method:"DELETE",headers:{"X-Admin-Key":byId("adminKey").value}});loadProducts();}
+        catch(e){setStatus("adminStatus",e.message,true);}
+      };
+      info.appendChild(remove);
+    }
+    card.appendChild(info);return card;
+  }
+  byId("searchBtn").onclick=async()=>{
+    const file=byId("queryImage").files[0];
+    if(!file)return setStatus("searchStatus","Əvvəlcə şəkil seçin.",true);
+    const button=byId("searchBtn");button.disabled=true;setStatus("searchStatus","Şəkil analiz edilir...",false);
+    try{
+      const form=new FormData();form.append("image",file);
+      const data=await request("/api/search",{method:"POST",body:form});
+      const area=byId("results");area.replaceChildren();
+      data.results.forEach(p=>area.appendChild(productCard(p,false)));
+      byId("speed").textContent=data.elapsed_ms+" ms";
+      setStatus("searchStatus",data.results.length?data.results.length+" uyğun namizəd tapıldı.":"İndeks boşdur. Əvvəlcə kataloqa məhsul əlavə edin.",false);
+    }catch(e){setStatus("searchStatus",e.message,true);}finally{button.disabled=false;}
+  };
+  byId("productForm").onsubmit=async(e)=>{
+    e.preventDefault();
+    const button=byId("addBtn");button.disabled=true;setStatus("adminStatus","Şəkillər indeksləşdirilir...",false);
+    try{
+      const form=new FormData(e.target);
+      const files=byId("catalogImages").files;
+      if(files.length>6)throw new Error("Ən çox 6 şəkil əlavə edilə bilər");
+      const data=await request("/api/admin/products",{method:"POST",headers:{"X-Admin-Key":byId("adminKey").value},body:form});
+      setStatus("adminStatus","Məhsul #"+data.id+" yadda saxlanıldı.",false);
+      for(const el of e.target.querySelectorAll("[name]")){el.value="";}
+      await loadProducts();
+    }catch(e){setStatus("adminStatus",e.message,true);}finally{button.disabled=false;}
+  };
+  async function loadProducts(){
+    try{const products=await request("/api/products");const area=byId("catalog");area.replaceChildren();products.forEach(p=>area.appendChild(productCard(p,true)));}
+    catch(e){setStatus("adminStatus",e.message,true);}
+  }
+  async function health(){
+    try{
+      const h=await request("/api/health");
+      byId("providerBadge").textContent=h.provider+" · "+h.products+" məhsul";
+      if(h.provider.startsWith("lite"))setStatus("searchStatus","Demo rejimi: Lite yalnız sadə vizual oxşarlıq üçündür. Telefonla fərqli bucaqdan dəqiq tanıma üçün Gemini və ya DINOv2 seçin.",false);
+      if(!h.index_ready)setStatus("searchStatus","Cari model üçün indeks tam hazır deyil; serverdə python -m app.reindex işlədin.",true);
+    }catch(e){byId("providerBadge").textContent="Server əlçatan deyil";}
+  }
+  health();
+})();
+</script>
+</body>
+</html>
