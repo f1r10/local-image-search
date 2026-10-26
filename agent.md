@@ -72,3 +72,14 @@
 - Quantitative runner-only synthetic smoke: Torch warmed 185/184 ms with YOLO auto; ONNX 99 ms with YOLO off. NOT comparable directly, and NOT AWS results.
 - STILL OPEN: AWS installation, genuine watch database/phone-photo tests (Top-1, Top-3, no-match), measured AWS latency, public endpoint rate limits/HTTPS, licensing review before commercial deployment.
 - New sessions MUST read agent.md and README.md and confirm main HEAD before any further edits.
+
+
+## Module 2 exploratory research and Colab prototype — 2026-10-26
+- Goal: reverse product photo search across the public web, independently from Module 1 local catalog.
+- Reviewed Google Cloud Vision WEB_DETECTION, SerpApi Google Lens, SearchApi, RapidAPI, ddgs and multi-engine browser handoff. No verified stable unlimited free automated internet-wide reverse-image API. SerpApi publishes 250 free monthly searches; Google Cloud Vision first 1000 Web Detection units/month free, billing required.
+- Colab prototype prepared as a downloadable artifact: Module2_Internet_Image_Search_Colab.ipynb with two vendor adapters and opt-in ddgs text-image fallback; not committed to main until real user-run Colab evaluation.
+- Offline tests: 8/8 PASS for provider response parsing, upload/search request construction, image transcoding and guards; notebook mock smoke PASS. These are not live external provider results.
+- Live Colab / SerpApi / Vision search: NOT RUN (keys and real test images unavailable in this session).
+- Product search quality and AWS deployment: NOT RUN.
+- Integration gate: user runs the notebook with real phone images and shares anonymized JSON results or Top-1/Top-3 findings; then implement Module 2 in a separate FastAPI route/UI. Keep Module 1 provider indexes and existing tests intact; add key management, timeout, rate limit, per-provider budget, caching, SSRF protections and new regression tests.
+- NOTE: Notebook artifacts currently delivered in the conversation, not yet placed in repository.
