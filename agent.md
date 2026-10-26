@@ -83,3 +83,9 @@
 - Product search quality and AWS deployment: NOT RUN.
 - Integration gate: user runs the notebook with real phone images and shares anonymized JSON results or Top-1/Top-3 findings; then implement Module 2 in a separate FastAPI route/UI. Keep Module 1 provider indexes and existing tests intact; add key management, timeout, rate limit, per-provider budget, caching, SSRF protections and new regression tests.
 - NOTE: Notebook artifacts currently delivered in the conversation, not yet placed in repository.
+
+## Module 2: no-key alternatives — 2026-10-26
+- User rejected SerpApi's 250 free searches/month as too restrictive. API-key-free does NOT imply guaranteed unlimited external searching.
+- Research: kitUIN/PicImageSearch (MIT; Google Lens, Yandex, Bing clients without SerpApi credits); omkarcloud/google-lens-scraper (MIT, self-hosted, but README acknowledges Google CAPTCHA and IP throttling after tens of searches, possible paid proxy/CAPTCHA); taazkareem/google-lens-pro (part free/part paid, may need Google session). SearXNG is text/image-keyword search fallback, NOT true upload-based reverse-image search.
+- Separate Colab experiment Module2_Keyless_Reverse_Search_Colab.ipynb prepared in conversation: notebook syntax/format validated; one manual image upload; three no-key PicImageSearch engines, serial searches and timing/error JSON report. NOT committed to app and live Colab provider search NOT RUN.
+- Pending: test real phone images in Colab, observe rate limits and precision, then implement separate Module 2 route/UI and regression tests while retaining Module 1.
