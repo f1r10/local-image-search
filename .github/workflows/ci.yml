@@ -17,3 +17,19 @@ jobs:
         run: python -m pytest -q
       - name: Compile source
         run: python -m compileall -q app
+      - name: Build Docker image
+        run: docker build -t local-image-search:ci .
+      - name: Container HTTP smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name image-search-smoke -e ADMIN_TOKEN=ci-secret -e IMAGE_PROVIDER=lite -p 127.0.0.1:18000:8000 local-image-search:ci
+          trap 'docker rm -f image-search-smoke >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18000/api/health >/tmp/image-health.json 2>/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          python -c 'import json; h=json.load(open("/tmp/image-health.json")); assert h["status"]=="ready" and h["products"]==0 and h["provider"]=="lite-rgb-v1",h; print(h)'
+          curl -fsS http://127.0.0.1:18000/ | grep -q 'Visual Product Finder'
