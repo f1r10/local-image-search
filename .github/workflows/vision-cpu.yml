@@ -55,3 +55,41 @@ jobs:
           print(f"provider={engine.key} load_ms={load_ms:.0f} infer_ms={measurements} ")
           print("Synthetic image only; not a phone-photo retrieval accuracy benchmark.")
           PY
+
+  onnx-cpu-inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU-only PyTorch
+        run: python -m pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install ONNX dependencies
+        run: python -m pip install -r requirements-vision-onnx.txt
+      - name: Validate real ONNX export and CPU inference
+        env:
+          YOLO_CROP_MODE: off
+          TORCH_NUM_THREADS: '2'
+          DINO_ONNX_DIR: /tmp/dinov2-onnx
+        run: |
+          python - <<'PY'
+          import io
+          import time
+          import numpy as np
+          from PIL import Image
+          from app.vision_pipeline import DinoYolo
+          stream = io.BytesIO()
+          Image.new('RGB', (224, 224), 'blue').save(stream, 'JPEG')
+          t = time.perf_counter()
+          engine = DinoYolo('onnx')
+          load_ms = (time.perf_counter()-t)*1000
+          t = time.perf_counter()
+          vector = engine.embed(stream.getvalue())
+          query_ms = (time.perf_counter()-t)*1000
+          assert vector.shape == (384,)
+          assert np.all(np.isfinite(vector))
+          assert np.isclose(np.linalg.norm(vector), 1.0)
+          print('ONNX CPU TEST PASS', engine.key, load_ms, query_ms)
+          PY
