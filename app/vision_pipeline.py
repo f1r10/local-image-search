@@ -113,7 +113,7 @@ class DinoYolo:
         mode, classes, conf, area, yolo_model, fingerprint = settings()
         self.mode, self.classes = mode, classes
         self.min_conf, self.min_area = conf, area
-        self.key = "dinov2-yolo-mean-" + backend + "-v1-" + fingerprint
+        self.key = "dinov2-yolo-mean-" + backend + ("-v2-" if backend == "onnx" else "-v1-") + fingerprint
         self._lock = threading.Lock()
         self.detector = None
         if mode == "auto":
@@ -126,20 +126,51 @@ class DinoYolo:
         if backend == "torch":
             self.model = AutoModel.from_pretrained(MODEL_ID).eval().to("cpu")
         else:
+            # Use ONNX Runtime directly to avoid Optimum's torch.int4 compatibility
+            # failure with the 2.5 CPU build. Torch is used only for one-time export.
             try:
-                from optimum.onnxruntime import ORTModelForFeatureExtraction
+                import onnxruntime as ort
+                import onnx  # required by torch.onnx.export
             except ImportError as exc:
                 raise RuntimeError("Install requirements-vision-onnx.txt for ONNX") from exc
             cache = Path(os.getenv("DINO_ONNX_DIR", "model-cache/dinov2-onnx"))
-            if (cache / "model.onnx").exists():
-                self.model = ORTModelForFeatureExtraction.from_pretrained(
-                    str(cache), provider="CPUExecutionProvider")
-            else:
-                # One-time conversion; cache this on persistent disk, not every request.
-                self.model = ORTModelForFeatureExtraction.from_pretrained(
-                    MODEL_ID, export=True, provider="CPUExecutionProvider")
-                cache.mkdir(parents=True, exist_ok=True)
-                self.model.save_pretrained(str(cache))
+            cache.mkdir(parents=True, exist_ok=True)
+            graph = cache / "model-colab-v2.onnx"
+            if not graph.is_file():
+                class LastHidden(torch.nn.Module):
+                    def __init__(self, encoder):
+                        super().__init__()
+                        self.encoder = encoder
+
+                    def forward(self, pixel_values):
+                        return self.encoder(pixel_values=pixel_values).last_hidden_state
+
+                encoder = AutoModel.from_pretrained(MODEL_ID).eval().to("cpu")
+                example = self.processor(
+                    images=Image.new("RGB", (224, 224)), return_tensors="pt"
+                )["pixel_values"]
+                tmp = graph.with_suffix(".tmp.onnx")
+                try:
+                    torch.onnx.export(
+                        LastHidden(encoder).eval(), (example,), str(tmp),
+                        opset_version=17,
+                        input_names=["pixel_values"],
+                        output_names=["last_hidden_state"],
+                        dynamic_axes={
+                            "pixel_values": {0: "batch"},
+                            "last_hidden_state": {0: "batch"},
+                        },
+                    )
+                    tmp.replace(graph)
+                finally:
+                    tmp.unlink(missing_ok=True)
+                del encoder
+            options = ort.SessionOptions()
+            options.intra_op_num_threads = max(1, min(4, int(os.getenv("TORCH_NUM_THREADS", "2"))))
+            options.inter_op_num_threads = 1
+            self.session = ort.InferenceSession(
+                str(graph), sess_options=options, providers=["CPUExecutionProvider"]
+            )
 
     def embed(self, jpeg):
         with self._lock:
@@ -150,6 +181,12 @@ class DinoYolo:
                 prepared = crop_main_object(
                     prepared, result, self.classes, self.min_conf, self.min_area)
             inputs = self.processor(images=prepared, return_tensors="pt")
-            with self.torch.inference_mode():
-                output = self.model(**inputs)
-            return mean_pool_embedding(output.last_hidden_state)
+            if self.backend == "torch":
+                with self.torch.inference_mode():
+                    hidden = self.model(**inputs).last_hidden_state
+            else:
+                hidden = self.session.run(
+                    ["last_hidden_state"],
+                    {"pixel_values": inputs["pixel_values"].cpu().numpy()},
+                )[0]
+            return mean_pool_embedding(hidden)
