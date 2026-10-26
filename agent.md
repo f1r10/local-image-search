@@ -60,3 +60,5 @@
 - **Next priority:** 1) inspect PR CI; fix any failures; 2) deploy CPU image on 2–4 vCPU/4–8 GB instance; 3) test Torch end-to-end; 4) test ONNX export and speed against Torch; 5) compare crop on/off with 20–30 representative user photos; 6) tune/validate no-match threshold; 7) rate-limit public endpoints and back up SQLite + JPEGs.
 
 - **Real-weights CPU smoke verification:** PR workflow `.github/workflows/vision-cpu.yml` introduced; downloads CPU-only PyTorch, YOLOv8n and DINOv2 weights, checks 384-d normalized vector and repeated-inference consistency. At submission: **PENDING**; check run status before describing as PASS. This synthetic test cannot measure watch retrieval accuracy or AWS latency.
+
+- Verified test 2026-10-26: real CPU inference PASS https://github.com/f1r10/local-image-search/actions/runs/40286503050 (initial 307.9 ms, warm 185.6 and 183.9 ms, synthetic image; 384-dimension normalized vectors). Full CI PASS https://github.com/f1r10/local-image-search/actions/runs/40286503061. AWS timing and ONNX performance NOT TESTED.
