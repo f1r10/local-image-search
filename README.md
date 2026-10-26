@@ -100,3 +100,6 @@ For watch-only benchmarks, set `YOLO_CROP_MODE=off` and **reindex** before compa
 **Licenses:** DINOv2 Small is Apache-2.0, while Ultralytics YOLOv8/code/weights have AGPL-3.0 or paid Enterprise terms. Commercial or closed-source SaaS deployment needs an explicit license compliance review; do not assume a public GitHub repository alone satisfies all obligations. See https://www.ultralytics.com/license and https://huggingface.co/facebook/dinov2-small.
 
 **Tests:** `python -m pytest -q` checks deterministic cropping, mean pooling and existing API behavior without heavyweight model downloads. A full CPU-model inference smoke test and real-phone retrieval benchmark remain **NOT RUN** until an appropriate host/model download and sample images are available.
+
+### ONNX CPU smoke test
+Confirmed on GitHub-hosted CPU (synthetic input): direct ONNX Runtime export/inference PASS after replacing the incompatible Optimum wrapper. Model export plus startup 5.86 s; embedding 99.3 ms with `YOLO_CROP_MODE=off`. Evidence: https://github.com/f1r10/local-image-search/actions/runs/40287245273 . The PyTorch run used YOLO auto-cropping, so those timings are not like-for-like. AWS performance and phone-photo accuracy remain unverified; ensure `python -m app.reindex` when switching to the `onnx-v2` embedding provider.
