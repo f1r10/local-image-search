@@ -1,0 +1,57 @@
+name: CPU model smoke (real weights)
+on:
+  pull_request:
+    paths:
+      - app/vision_pipeline.py
+      - requirements-vision-cpu.txt
+      - .github/workflows/vision-cpu.yml
+  workflow_dispatch:
+jobs:
+  torch-cpu-inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU-only PyTorch
+        run: python -m pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install image model runtime
+        run: python -m pip install -r requirements-vision-cpu.txt
+      - name: Load real YOLOv8n and DINOv2 weights and embed on CPU
+        env:
+          IMAGE_PROVIDER: dinov2-yolo-torch
+          YOLO_CROP_MODE: auto
+          TORCH_NUM_THREADS: '2'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+        run: |
+          python - <<'PY'
+          import io
+          import time
+          import numpy as np
+          from PIL import Image, ImageDraw
+          from app.vision_pipeline import DinoYolo
+          img = Image.new("RGB", (256, 256), "white")
+          ImageDraw.Draw(img).rectangle((55, 65, 195, 190), fill="blue")
+          buf = io.BytesIO()
+          img.save(buf, "JPEG")
+          jpeg = buf.getvalue()
+          start = time.perf_counter()
+          engine = DinoYolo("torch")
+          load_ms = (time.perf_counter() - start) * 1000
+          measurements = []
+          vectors = []
+          for _ in range(3):
+              t = time.perf_counter()
+              vec = engine.embed(jpeg)
+              measurements.append((time.perf_counter() - t) * 1000)
+              vectors.append(vec)
+              assert vec.shape == (384,), vec.shape
+              assert np.all(np.isfinite(vec))
+              assert np.isclose(np.linalg.norm(vec), 1., atol=1e-5)
+          assert np.allclose(vectors[0], vectors[1], atol=1e-4)
+          print("REAL CPU TORCH MODEL SMOKE PASS")
+          print(f"provider={engine.key} load_ms={load_ms:.0f} infer_ms={measurements} ")
+          print("Synthetic image only; not a phone-photo retrieval accuracy benchmark.")
+          PY

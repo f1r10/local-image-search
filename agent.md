@@ -58,3 +58,5 @@
 - **Licensing:** Ultralytics YOLO software/model is AGPL-3.0 or Enterprise; evaluate compliance before proprietary/commercial use. DINOv2 Small model card Apache 2.0.
 - **Test evidence at coding stage:** NOT RUN for heavy-model weights/ONNX export/AWS CPU benchmarks or real watch accuracy; prior Lite CI was PASS at run 40283647486. New unit regression tests will be checked by the PR GitHub Actions run; do not mark PASS before checking it.
 - **Next priority:** 1) inspect PR CI; fix any failures; 2) deploy CPU image on 2–4 vCPU/4–8 GB instance; 3) test Torch end-to-end; 4) test ONNX export and speed against Torch; 5) compare crop on/off with 20–30 representative user photos; 6) tune/validate no-match threshold; 7) rate-limit public endpoints and back up SQLite + JPEGs.
+
+- **Real-weights CPU smoke verification:** PR workflow `.github/workflows/vision-cpu.yml` introduced; downloads CPU-only PyTorch, YOLOv8n and DINOv2 weights, checks 384-d normalized vector and repeated-inference consistency. At submission: **PENDING**; check run status before describing as PASS. This synthetic test cannot measure watch retrieval accuracy or AWS latency.
