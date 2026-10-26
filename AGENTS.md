@@ -17,6 +17,7 @@
 ## Milestones and current verification (do not infer success)
 - M0 Repository initialization: created initial README commit e4b71caa36025e4960dcc399d402bd1f89d7160c.
 - M1 MVP implementation: FastAPI routes, providers, image validation, persistent SQLite, responsive frontend, Docker Compose, CLI reindex, basic tests and GitHub Actions prepared in this change. **Implementation must be verified against actual commit and CI; status initially UNVERIFIED.**
+- M1 CI first run: https://github.com/f1r10/local-image-search/actions/runs/40283239747 FAILED during collection (ModuleNotFoundError: app); changed workflow to python -m pytest; rerun pending. Also fixed SQLite connections not closing.
 - M2 AWS deployment: NOT STARTED; server access not supplied. Instructions available in README.
 - M3 Real-world phone image evaluation: NOT STARTED. No user-owned photos provided. Collect 20–30 products with diverse views and evaluate Top-1, Top-3, P50/P95 latency.
 - M4 Production hardening: NOT STARTED; rate limits, backups, admin auth improvements, SKU constraints, observability, API quota control, model fallback / timeouts.

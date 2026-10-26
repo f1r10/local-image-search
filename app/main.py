@@ -6,7 +6,7 @@ import secrets
 import sqlite3
 import time
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -29,11 +29,16 @@ def storage():
     return root
 
 
+@contextmanager
 def connect():
     db = sqlite3.connect(storage() / "products.sqlite3", timeout=15)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
-    return db
+    try:
+        with db:
+            yield db
+    finally:
+        db.close()
 
 
 def init_db():

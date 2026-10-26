@@ -47,7 +47,7 @@ pip install -r requirements-dev.txt
 export ADMIN_TOKEN=test-local
 export IMAGE_PROVIDER=lite
 uvicorn app.main:app --reload
-# ayrı terminal: pytest -q
+# ayrı terminal: python -m pytest -q
 ```
 
 ## Tətbiq funksiyaları

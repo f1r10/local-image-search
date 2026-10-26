@@ -14,6 +14,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Run API tests
-        run: pytest -q
+        run: python -m pytest -q
       - name: Compile source
         run: python -m compileall -q app
