@@ -62,3 +62,5 @@
 - **Real-weights CPU smoke verification:** PR workflow `.github/workflows/vision-cpu.yml` introduced; downloads CPU-only PyTorch, YOLOv8n and DINOv2 weights, checks 384-d normalized vector and repeated-inference consistency. At submission: **PENDING**; check run status before describing as PASS. This synthetic test cannot measure watch retrieval accuracy or AWS latency.
 
 - Verified test 2026-10-26: real CPU inference PASS https://github.com/f1r10/local-image-search/actions/runs/40286503050 (initial 307.9 ms, warm 185.6 and 183.9 ms, synthetic image; 384-dimension normalized vectors). Full CI PASS https://github.com/f1r10/local-image-search/actions/runs/40286503061. AWS timing and ONNX performance NOT TESTED.
+
+- ONNX follow-up (2026-10-26): first attempt failed due to an Optimum runtime compatibility issue (CI 40286932427). Replaced with direct ONNX Runtime; smoke PASS (CI 40287245273). Tested embedding 99.3 ms without YOLO crop on hosted CPU, synthetic image only. AWS and real-product benchmarks remain pending. Reindex on ONNX version changes.
